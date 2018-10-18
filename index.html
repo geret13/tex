@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tex Formula Renderer</title>
+
+    <style type="text/css" media="screen">
+        #editor {
+            position: absolute;
+            top: 0;
+            right: 50vw;
+            bottom: 0;
+            left: 0;
+        }
+
+        #view {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 50vw;
+
+            background-color: #0e0e0e;
+        }
+
+        #view-img {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+
+            max-width: calc(50vw - 50px);
+
+            transform: translateY(-50%) translateX(-50%);
+        }
+
+        #view-errors {
+            position: static;
+            left: 0;
+            top: 0;
+            right: 0;
+
+            margin: 20px;
+
+            color: #d63236;
+        }
+    </style>
+</head>
+<body>
+
+<div id="editor">\left.\begin{array}{rl}
+    0&=x^3+2x^2+4x+8\\
+    &=x^2(x+2)+4(x+2)\\
+    &=(x+2)(x^2+4)
+    \end{array}\right\} \Rightarrow
+    x=-2, x=\frac{\pm \sqrt{-16}}{2}=\pm 2i
+</div>
+
+<div id="view">
+    <div id="view-errors"></div>
+    <img id="view-img" src="">
+</div>
+
+<script src="/underscore-min.js"></script>
+<script src="/ace.js"></script>
+
+<script>
+  let view = document.getElementById("view-img");
+  let errorsView = document.getElementById("view-errors");
+
+  let editor = ace.edit("editor");
+  editor.setTheme("ace/theme/monokai");
+  editor.session.setMode("ace/mode/tex");
+
+  let updateView = _.debounce(function () {
+    let size = 200;
+
+    let tex = editor.getValue().replace(/\n/g, ' ');
+    tex = encodeURI(tex);
+
+    errorsView.textContent = '';
+
+    view.src = location.origin + "/" + size + "/" + tex;
+  }, 100);
+
+  view.onerror = function () {
+    let tex = editor.getValue().replace(/\n/g, ' ');
+    tex = encodeURI(tex);
+
+    let xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+      if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+        console.log(xmlHttp.responseText);
+        let errors = JSON.parse(xmlHttp.responseText);
+
+        for (let i in errors) {
+          errorsView.innerHTML += " - " + errors[i] + "<br>"
+        }
+      }
+    };
+    xmlHttp.open("GET", location.origin + "/check/" + tex);
+    xmlHttp.send(null);
+  };
+
+  editor.on("change", function (e) {
+    localStorage.setItem("tex", editor.getValue());
+
+    updateView();
+  });
+
+  let localTex = localStorage.getItem("tex");
+  if (localTex) {
+    editor.setValue(localTex)
+  }
+
+  updateView();
+</script>
+</body>
+</html>

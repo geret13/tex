@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+  tex:
+    image: registry.g13.io/geret13/tex
+    networks:
+    - web
+    labels:
+      traefik.enable: "true"
+      traefik.frontend.rule: "Host:tex.g13.io"
+      traefik.port: "3000"
+    restart: "always"
+
+networks:
+  web:
+    external: true
