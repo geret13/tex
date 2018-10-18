@@ -5,6 +5,10 @@
     <title>Tex Formula Renderer</title>
 
     <style type="text/css" media="screen">
+        html, body {
+            background-color: #2F3129;
+        }
+
         #editor {
             position: absolute;
             top: 0;
@@ -51,8 +55,8 @@
     0&=x^3+2x^2+4x+8\\
     &=x^2(x+2)+4(x+2)\\
     &=(x+2)(x^2+4)
-    \end{array}\right\} \Rightarrow
-    x=-2, x=\frac{\pm \sqrt{-16}}{2}=\pm 2i
+\end{array}\right\} \Rightarrow
+x=-2, x=\frac{\pm \sqrt{-16}}{2}=\pm 2i
 </div>
 
 <div id="view">
@@ -82,7 +86,7 @@
     view.src = location.origin + "/" + size + "/" + tex;
   }, 100);
 
-  view.onerror = function () {
+  view.onerror = _.debounce(function () {
     let tex = editor.getValue().replace(/\n/g, ' ');
     tex = encodeURI(tex);
 
@@ -99,7 +103,7 @@
     };
     xmlHttp.open("GET", location.origin + "/check/" + tex);
     xmlHttp.send(null);
-  };
+  }, 500);
 
   editor.on("change", function (e) {
     localStorage.setItem("tex", editor.getValue());
@@ -107,9 +111,13 @@
     updateView();
   });
 
-  let localTex = localStorage.getItem("tex");
-  if (localTex) {
-    editor.setValue(localTex)
+  if(window.location.hash) {
+    editor.setValue(decodeURIComponent(window.location.hash.substr(1)))
+  } else {
+    let localTex = localStorage.getItem("tex");
+    if (localTex) {
+      editor.setValue(localTex)
+    }
   }
 
   updateView();
