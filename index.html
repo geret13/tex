@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Tex Formula Renderer</title>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <style type="text/css" media="screen">
         html, body {
             background-color: #2F3129;
@@ -46,6 +48,34 @@
             margin: 20px;
 
             color: #d63236;
+        }
+
+        @media screen and (max-width: 1400px) {
+            #editor {
+                top: 0;
+                right: 0;
+                bottom: 50vh;
+                left: 0;
+            }
+
+            #view {
+                position: absolute;
+                top: 50vh;
+                right: 0;
+                bottom: 0;
+                left: 0;
+            }
+
+            #view-img {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+
+                max-width: calc(100vw - 50px);
+                max-height: calc(50vh - 50px);
+
+                transform: translateY(-50%) translateX(-50%);
+            }
         }
     </style>
 </head>
