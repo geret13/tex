@@ -17,94 +17,99 @@ mjAPI.config({
 mjAPI.start();
 
 const requestHandler = (req, res) => {
-  let request = url.parse(req.url, true);
-  let action = decodeURIComponent(decodeURIComponent(request.pathname.substr(1)));
+  try {
+    let request = url.parse(req.url, true);
+    let action = decodeURIComponent(decodeURIComponent(request.pathname.substr(1)));
 
-  if (action.endsWith("underscore-min.js")) {
-    fs.readFile(path.join('node_modules/underscore/', action), 'utf8', function(err, contents) {
-      if (!err) {
-        res.writeHead(200, { 'Content-Type': 'text/javascript' });
+    if (action.endsWith("underscore-min.js")) {
+      fs.readFile(path.join('node_modules/underscore/', action), 'utf8', function (err, contents) {
+        if (!err) {
+          res.writeHead(200, { 'Content-Type': 'text/javascript' });
+          res.end(contents);
+        } else {
+          res.writeHead(404);
+          res.end();
+        }
+      });
+      return;
+    }
+
+    if (action.endsWith(".js")) {
+      fs.readFile(path.join('node_modules/ace-builds/src-min/', action), 'utf8', function (err, contents) {
+        if (!err) {
+          res.writeHead(200, { 'Content-Type': 'text/javascript' });
+          res.end(contents);
+        } else {
+          res.writeHead(404);
+          res.end();
+        }
+      });
+      return;
+    }
+
+    if (action === "") {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      fs.readFile('index.html', 'utf8', function (err, contents) {
         res.end(contents);
-      } else {
-        res.writeHead(404);
-        res.end();
-      }
-    });
-    return;
-  }
+      });
+      return;
+    }
 
-  if (action.endsWith(".js")) {
-    fs.readFile(path.join('node_modules/ace-builds/src-min/', action), 'utf8', function(err, contents) {
-      if (!err) {
-        res.writeHead(200, { 'Content-Type': 'text/javascript' });
-        res.end(contents);
-      } else {
-        res.writeHead(404);
-        res.end();
-      }
-    });
-    return;
-  }
+    if (action === "favicon.ico") {
+      res.end();
+      return;
+    }
 
-  if (action === "") {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    fs.readFile('index.html', 'utf8', function(err, contents) {
-      res.end(contents);
-    });
-    return;
-  }
+    let dpi = "115";
+    let input = action.match(/(.+)\/(.*)/);
 
-  if (action === "favicon.ico") {
-    res.end();
-    return;
-  }
+    if (input) {
+      dpi = input[1];
+      action = input[2];
+    }
 
-  let dpi = "115";
-  let input = action.match(/(.+)\/(.*)/);
+    if (dpi === "check") {
+      mjAPI.typeset({
+        math: action,
+        format: "TeX", // or "inline-TeX", "MathML"
+        svg: true,     // or svg:true, or html:true
+      }, function (data) {
+        if (!data.errors) {
+          res.end('[]');
+        } else {
+          res.end(JSON.stringify(data.errors));
+        }
+      });
+      return;
+    }
 
-  if (input) {
-    dpi = input[1];
-    action = input[2];
-  }
-
-  if (dpi === "check") {
     mjAPI.typeset({
       math: action,
       format: "TeX", // or "inline-TeX", "MathML"
-      svg: true,     // or svg:true, or html:true
+      svg: true,      // or svg:true, or html:true
     }, function (data) {
       if (!data.errors) {
-        res.end('[]');
+        res.writeHead(200, { 'Content-Type': 'image/png' });
+
+        let svg = data.svg.replace(/currentColor/g, 'white');
+
+        sharp(Buffer.from(svg), {
+          density: dpi
+        })
+          .png()
+          .toBuffer()
+          .then(function (data) {
+            res.end(data);
+          });
       } else {
+        res.writeHead(400);
         res.end(JSON.stringify(data.errors));
       }
     });
-    return;
+  } catch (e) {
+    res.writeHead(500);
+    res.end(e.toString());
   }
-
-  mjAPI.typeset({
-    math: action,
-    format: "TeX", // or "inline-TeX", "MathML"
-    svg: true,      // or svg:true, or html:true
-  }, function (data) {
-    if (!data.errors) {
-      res.writeHead(200, { 'Content-Type': 'image/png' });
-
-      let svg = data.svg.replace(/currentColor/g, 'white');
-
-      sharp(Buffer.from(svg), {
-        density: dpi
-      })
-        .png()
-        .toBuffer()
-        .then(function (data) {
-          res.end(data);
-        });
-    } else {
-      res.writeHead(400);
-      res.end(JSON.stringify(data.errors));
-    }
-  });
 };
 
 const server = http.createServer(requestHandler);
