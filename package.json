@@ -12,6 +12,6 @@
     "ace-builds": "^1.4.1",
     "mathjax-node": "^2.1.1",
     "sharp": "^0.21.0",
-    "underscore": "^1.9.1"
+    "underscore": "^1.12.1"
   }
 }
