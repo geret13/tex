@@ -9,9 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ace-builds": "^1.4.1",
+    "ace-builds": "^1.4.12",
     "mathjax-node": "^2.1.1",
-    "sharp": "^0.21.0",
-    "underscore": "^1.9.1"
+    "sharp": "^0.29.0",
+    "underscore": "^1.13.1"
   }
 }

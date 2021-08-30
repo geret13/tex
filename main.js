@@ -91,12 +91,17 @@ const requestHandler = (req, res) => {
       if (!data.errors) {
         res.writeHead(200, { 'Content-Type': 'image/png' });
 
-        let svg = data.svg.replace(/currentColor/g, 'white');
+        let svg = data.svg.replace(/currentColor/g, (typeof request.query.black !== 'undefined') ? 'black' : 'white');
 
-        sharp(Buffer.from(svg), {
-          density: dpi
+        const img = sharp(Buffer.from(svg), {
+          density: parseInt(dpi)
         })
-          .png()
+
+        if (typeof request.query.background !== 'undefined') {
+          img.flatten({ background: (typeof request.query.black !== 'undefined') ? 'white' : 'black' });
+        }
+
+        img.png()
           .toBuffer()
           .then(function (data) {
             res.end(data);
